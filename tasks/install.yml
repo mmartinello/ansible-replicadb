@@ -1,0 +1,81 @@
+---
+- name: Install Java
+  ansible.builtin.include_role:
+    name: geerlingguy.java
+  vars:
+    java_home: "/"
+
+- name: Determine lastest ReplicaDB release
+  when: (replicadb_version is not defined) or (replicadb_version == 'latest')
+  run_once: true
+  block:
+    - name: Determine latest GitHub release (local)
+      ansible.builtin.uri:
+        url: "https://api.github.com/repos/osalvador/ReplicaDB/releases/latest"
+        body_format: json
+      delegate_to: localhost
+      become: false
+      register: _github_release
+      until: _github_release.status == 200
+      retries: 5
+
+    - name: Set ReplicaDB
+      ansible.builtin.set_fact:
+        replicadb_version: "{{ _github_release.json.tag_name
+          | regex_replace('^v?(.*)$', '\\1') }}"
+
+- name: Remove existing installation if exists
+  ansible.builtin.file:
+    path: "{{ replicadb_path }}"
+    state: absent
+
+- name: Download ReplicaDB tarball
+  ansible.builtin.get_url:
+    url: "https://github.com/osalvador/ReplicaDB/releases/download/v{{ replicadb_version }}/ReplicaDB-{{ replicadb_version }}.tar.gz"
+    dest: /tmp/replicadb.tar.gz
+    mode: "0600"
+
+- name: Create the temporary directory
+  ansible.builtin.file:
+    path: /tmp/replicadb
+    state: directory
+    mode: "0750"
+
+- name: Extract the downloaded archive
+  ansible.builtin.unarchive:
+    src: /tmp/replicadb.tar.gz
+    dest: /tmp/replicadb
+    remote_src: true
+    owner: root
+    group: root
+
+- name: Create installation path
+  ansible.builtin.file:
+    path: "{{ replicadb_path }}"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Copy plugins to the destination directory
+  ansible.builtin.shell: "cp -a /tmp/replicadb/* {{ replicadb_path }}/"
+  register: command
+  changed_when: command.rc == 0
+
+- name: Remove the temporary directory
+  ansible.builtin.file:
+    path: /tmp/replicadb
+    state: absent
+
+- name: Remove the downloaded archive
+  ansible.builtin.file:
+    path: /tmp/replicadb.tar.gz
+    state: absent
+
+- name: Create symbolic link
+  ansible.builtin.file:
+    src: "{{ replicadb_path }}/bin/replicadb"
+    dest: /usr/local/bin/replicadb
+    owner: root
+    group: root
+    state: link

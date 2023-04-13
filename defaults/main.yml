@@ -1,0 +1,12 @@
+---
+# ReplicaDB version to be installed
+replicadb_version: latest
+
+# ReplicaDB installation target path
+replicadb_path: /opt/replicadb
+
+# Reinstall ReplicaDB if already installed
+replicadb_reinstall: false
+
+# ReplicaDB installed: if true do not (re)install
+replicadb_installed: false

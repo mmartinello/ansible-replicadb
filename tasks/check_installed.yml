@@ -1,0 +1,10 @@
+---
+- name: Check for the installed status file
+  ansible.builtin.stat:
+    path: "{{ replicadb_path }}"
+  register: _install_path
+
+- name: Set the installed variable
+  ansible.builtin.set_fact:
+    replicadb_installed: true
+  when: _install_path.stat.exists

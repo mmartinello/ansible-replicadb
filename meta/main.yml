@@ -1,0 +1,18 @@
+galaxy_info:
+  author: Mattia Martinello
+  description: Install ReplicaDB
+  issue_tracker_url: https://github.com/mmartinello/ansible-replicadb
+  license: MIT
+  min_ansible_version: 2.1
+  platforms:
+    - name: Debian
+      versions:
+        - buster
+        - bullseye
+  galaxy_tags:
+    - replicadb
+    - database
+    - sync
+
+dependencies:
+  - role: geerlingguy.java

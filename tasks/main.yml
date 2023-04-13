@@ -1,0 +1,8 @@
+---
+- name: Check if ReplicaDB is already installed
+  ansible.builtin.include_tasks: check_installed.yml
+  when: not replicadb_reinstall
+
+- name: Install ReplicaDB
+  ansible.builtin.include_tasks: install.yml
+  when: not replicadb_installed
